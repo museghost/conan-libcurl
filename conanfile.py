@@ -210,7 +210,7 @@ class LibcurlConan(ConanFile):
                 if self.options.with_librtmp:
                     self.cpp_info.libs.extend(["rtmp"])
                 if self.options.with_ldap:
-                    self.cpp_info.libs.extend(["ldap"])    
+                    self.cpp_info.libs.extend(["ldap", "lber"])    
                 if self.use_brotli and self.options.with_brotli:
                     self.cpp_info.libs.extend(["brotlidec"])
             if self.settings.os == "Macos":
