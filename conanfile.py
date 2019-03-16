@@ -9,7 +9,7 @@ from conans import ConanFile, AutoToolsBuildEnvironment, RunEnvironment, CMake, 
 
 class LibcurlConan(ConanFile):
     name = "libcurl"
-    version = "7.61.1"
+    version = "7.64.1"
     description = "command line tool and library for transferring data with URLs"
     url = "http://github.com/bincrafters/conan-libcurl"
     homepage = "http://curl.haxx.se"
@@ -95,6 +95,14 @@ class LibcurlConan(ConanFile):
             if self.settings.compiler != "Visual Studio":
                 self.options["libssh2"].shared = self.options.shared
 
+        # nghttp2
+        self.options["nghttp2"].with_jemalloc = True
+        self.options["nghttp2"].with_libevent = True
+        self.options["nghttp2"].with_libxml2 = True
+        self.options["nghttp2"].with_libev = True
+        self.options["nghttp2"].with_libcares = True
+        self.options["nghttp2"].with_jansson = True
+
     def config_options(self):
 
         if self.settings.os != "Macos":
@@ -113,6 +121,7 @@ class LibcurlConan(ConanFile):
 
         # libpsl is supported for libcurl >= 7.46.0
         use_libpsl = self.version_components[0] == 7 and self.version_components[1] >= 46
+        
         if not use_libpsl:
             self.options.remove('with_libpsl')
 
@@ -133,16 +142,28 @@ class LibcurlConan(ConanFile):
             elif self.settings.os == "Windows" and self.options.with_winssl:
                 pass
             else:
-                self.requires.add("OpenSSL/1.0.2n@conan/stable")
+                self.requires.add("OpenSSL/1.0.2r@conan/stable")
         if self.options.with_libssh2:
             if self.settings.compiler != "Visual Studio":
-                self.requires.add("libssh2/1.8.0@bincrafters/stable")
+                self.requires.add("libssh2/1.8.0@aphrodite/stable")
 
         self.requires.add("zlib/1.2.11@conan/stable")
 
+        # nghttp2
+        if self.options.with_nghttp2:
+            self.requires.add("nghttp2/1.37.0@aphrodite/stable")
+
+        # brotli
+        if self.options.with_brotli:
+            self.requires.add("brotli/1.0.7@aphrodite/stable")
+
     def source(self):
-        tools.get("https://curl.haxx.se/download/curl-%s.tar.gz" % self.version)
-        os.rename("curl-%s" % self.version, self.source_subfolder)
+        #tools.get("https://curl.haxx.se/download/curl-%s.tar.gz" % self.version)
+        #os.rename("curl-%s" % self.version, self.source_subfolder)
+        #source_url = "https://github.com/curl/curl.git"
+        source_url = "https://github.com/museghost/curl.git"
+        git = tools.Git(folder=self.source_subfolder)
+        git.clone(source_url, "master")
         tools.download("https://curl.haxx.se/ca/cacert.pem", "cacert.pem", verify=False)
         os.rename(os.path.join(self.source_subfolder, "CMakeLists.txt"),
                   os.path.join(self.source_subfolder, "CMakeLists_original.txt"))
@@ -246,9 +267,19 @@ class LibcurlConan(ConanFile):
         params.append("--without-librtmp" if not self.options.with_librtmp else "--with-librtmp")
         params.append("--without-libmetalink" if not self.options.with_libmetalink else "--with-libmetalink")
         params.append("--without-libpsl" if not self.options.with_libpsl else "--with-libpsl")
-        params.append("--without-nghttp2" if not self.options.with_nghttp2 else "--with-nghttp2")
+        # nghttp2 path
+        if self.options.with_nghttp2:
+            params.append("--with-nghttp2={0}".format(self.deps_cpp_info['nghttp2'].rootpath.replace('\\', '/')))
+        else:
+            params.append("--without-nghttp2")
+
+        # brotli path
         if self.use_brotli:
-            params.append("--without-brotli" if not self.options.with_brotli else "--with-brotli")
+            # TODO: 지우기 params.append("--without-brotli" if not self.options.with_brotli else "--with-brotli")    
+            if self.options.with_brotli:
+                params.append("--with-brotli={0}".format(self.deps_cpp_info['brotli'].rootpath.replace('\\', '/')))
+            else:
+                params.append("--without-brotli")            
 
         if self.settings.os == "Macos" and self.options.darwin_ssl:
             params.append("--with-darwinssl")
