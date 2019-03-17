@@ -204,7 +204,8 @@ class LibcurlConan(ConanFile):
             if self.settings.os == "Linux":
                 self.cpp_info.libs.extend(["rt", "pthread"])
                 if self.options.with_libssh2:
-                    self.cpp_info.libs.extend(["ssh2"])
+                    if self.options.shared:
+                        self.cpp_info.libs.extend(["ssh2"])
                 if self.options.with_libidn:
                     self.cpp_info.libs.extend(["idn"])
                 if self.options.with_librtmp:
@@ -212,7 +213,8 @@ class LibcurlConan(ConanFile):
                 if self.options.with_ldap:
                     self.cpp_info.libs.extend(["ldap", "lber"])    
                 if self.use_brotli and self.options.with_brotli:
-                    self.cpp_info.libs.extend(["brotlidec"])
+                    if self.options.shared:
+                        self.cpp_info.libs.extend(["brotlidec"])
             if self.settings.os == "Macos":
                 if self.options.with_ldap:
                     self.cpp_info.libs.extend(["ldap"])
@@ -277,7 +279,6 @@ class LibcurlConan(ConanFile):
 
         # brotli path
         if self.use_brotli:
-            # TODO: 지우기 params.append("--without-brotli" if not self.options.with_brotli else "--with-brotli")    
             if self.options.with_brotli:
                 params.append("--with-brotli={0}".format(self.deps_cpp_info['brotli'].rootpath.replace('\\', '/')))
             else:
