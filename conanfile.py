@@ -9,7 +9,7 @@ from conans import ConanFile, AutoToolsBuildEnvironment, RunEnvironment, CMake, 
 
 class LibcurlConan(ConanFile):
     name = "libcurl"
-    version = "7.64.1"
+    version = "7.68.0"
     description = "command line tool and library for transferring data with URLs"
     url = "http://github.com/bincrafters/conan-libcurl"
     homepage = "http://curl.haxx.se"
@@ -158,12 +158,12 @@ class LibcurlConan(ConanFile):
             self.requires.add("brotli/1.0.7@aphrodite/stable")
 
     def source(self):
-        #tools.get("https://curl.haxx.se/download/curl-%s.tar.gz" % self.version)
-        #os.rename("curl-%s" % self.version, self.source_subfolder)
+        tools.get("https://curl.haxx.se/download/curl-%s.tar.gz" % self.version)
+        os.rename("curl-%s" % self.version, self.source_subfolder)
         #source_url = "https://github.com/curl/curl.git"
-        source_url = "https://github.com/museghost/curl.git"
-        git = tools.Git(folder=self.source_subfolder)
-        git.clone(source_url, "master")
+        ##source_url = "https://github.com/museghost/curl.git"
+        ##git = tools.Git(folder=self.source_subfolder)
+        ##git.clone(source_url, "master")
         tools.download("https://curl.haxx.se/ca/cacert.pem", "cacert.pem", verify=False)
         os.rename(os.path.join(self.source_subfolder, "CMakeLists.txt"),
                   os.path.join(self.source_subfolder, "CMakeLists_original.txt"))
